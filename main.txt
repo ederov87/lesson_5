@@ -1,0 +1,98 @@
+﻿package com.company;
+
+import java.util.Arrays;
+
+public class Main {
+
+    public static void main(String[] args) {
+    Method();
+	// write your code here
+    }
+    public static void Method(){
+        final int size = 10000000;
+        final int h = size/2;
+
+        float arrA[] = new float[size];
+        float arrB[] = new float[size];
+        float arrB1[] = new float[h];
+        float arrB2[] = new float[h];
+
+        long StartTM1, FinishTM1, StartTCS, FinishTCS, StartTCF, FinishTCF, StartP, FinishP;
+
+        for (int i = 0; i < size; i++) {
+            arrA[i] = 1;
+            arrB[i] = 1;
+        }
+
+        StartTM1 = System.currentTimeMillis();
+
+        for (int j = 0; j < size; j++) {
+            arrA[j] = (float)(arrA[j] * Math.sin(0.2f + j / 5) * Math.cos(0.2f + j / 5) * Math.cos(0.4f + j / 2));
+        }
+        FinishTM1 = System.currentTimeMillis();
+
+
+        StartTCS = System.currentTimeMillis();
+        System.arraycopy(arrB, 0, arrB1, 0, h);
+        System.arraycopy(arrB, h, arrB2, 0, h);
+        FinishTCS = System.currentTimeMillis();
+
+        StartP = System.currentTimeMillis();
+
+        ArrTr at1 = new ArrTr(arrB1, 1);
+        ArrTr at2 = new ArrTr(arrB2, 2);
+
+        Thread t1 = new Thread(at1);
+        Thread t2 = new Thread(at2);
+        t1.start();
+        t2.start();
+
+        try {
+            t1.join();
+            t2.join();
+        } catch (InterruptedException e) {
+            System.out.println(e);
+        }
+
+        FinishP = System.currentTimeMillis();
+
+        StartTCF = System.currentTimeMillis();
+        System.arraycopy(arrB1, 0, arrB, 0, h);
+        System.arraycopy(arrB2, 0, arrB, h, h);
+        FinishTCF = System.currentTimeMillis();
+
+
+        if(Arrays.equals(arrA, arrB)){
+            System.out.println("Methods return equal result\n");
+        }
+        else {
+            System.out.println("Methods return NONequal result\n");
+        }
+
+        System.out.println("Method№1: work time "+(FinishTM1 - StartTM1)+" ms; \nMethod№2: massive split "+(FinishTCS - StartTCS)+" ms, massive join "+(FinishTCF - StartTCF)+" ms, calculation "+
+                (FinishP - StartP)+" ms. Total "+(FinishP-StartTCS)+" ms\n\nDifference between methods "+(-FinishP+StartTCS+FinishTM1-StartTM1)+" ms");
+    }
+
+    public static class ArrTr implements Runnable{
+
+        private float[] arrF;
+        private int pNum;
+
+        ArrTr(float[] arrF, int pNum) {
+            this.arrF = arrF;
+            this.pNum = pNum;
+        }
+        public void run() {
+            FillArr(arrF, pNum);
+
+        }
+
+        private void FillArr (float [] arr, int pNum){
+            for (int j = 0; j < arr.length; j++) {
+                int I = j+arr.length*(pNum - 1);
+                arr[j] = (float)(arr[j] * Math.sin(0.2f + I / 5) * Math.cos(0.2f + I / 5) * Math.cos(0.4f + I / 2));
+            }
+        }
+
+    }
+}
